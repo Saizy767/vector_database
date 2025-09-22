@@ -1,0 +1,24 @@
+Universal Vector DB - Project layout and implementation (SEPARATE EMBEDDINGS & METADATA)
+# ------------------------------------------------------
+# Этот проект — адаптируемая векторная база данных, в которой эмбеддинги
+# и метаданные хранятся в **разных таблицах/хранилищах**, связаны по id.
+# Вход всегда: (id, embedding, metadata[, text]).
+#
+# Структура модулей (файлы расположены в src/vectordb/):
+# - models.py : Document dataclass (lightweight, metadata-only)
+# - storage/interface.py: storage interface describing separate stores
+# - storage/memory.py : memory storage with separate embedding & metadata stores
+# - storage/sql.py : skeleton SQL adapter storing embeddings and metadata in separate tables
+# - index/brute_force.py: in-memory brute-force index (embeddings only)
+# - embeddings/* : embedding provider interfaces (optional)
+# - core.py : VectorDB orchestrator — теперь принимает embedding+metadata always
+# - examples/example_usage.py : demo of CRUD/search with separate stores
+# - utils.py : helpers
+#
+# Ключевые идеи в этом обновлённом варианте:
+# - Хранилище разделено: методы для работы с EMBEDDINGS и METADATA по отдельности.
+# - Index работает только с EMBEDDINGS.
+# - VectorDB ожидает, что при добавлении/апдейте приходит embedding (вектор) и metadata.
+# - Если embedding отсутствует, можно опционально использовать embedder, но вы сказали: "вход всегда вектор и метаданные".
+#
+# ------------------------------------------------------

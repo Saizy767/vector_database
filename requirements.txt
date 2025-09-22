@@ -1,0 +1,5 @@
+# Core dependencies
+    numpy>=1.21
+
+# Optional: for SQL adapter
+    sqlalchemy>=2.0
