@@ -2,8 +2,10 @@ from __future__ import annotations
 from typing import List, Dict, Optional, Any, Tuple, Callable
 from vectordb.storage.interface import StorageInterface
 from vectordb.index.brute_force import BruteForceIndex
-from vectordb.models import DocumentMetadata
-from vectordb.utils import normalize_vector
+from vectordb.models import DocumentMetadata, DocumentEmbedding
+from vectordb.utils import normalize_vector, hash_embedding
+import time
+
 
 class VectorDB:
     def __init__(self, storage: StorageInterface, index=None, embedder=None):
@@ -22,25 +24,46 @@ class VectorDB:
             if emb is not None:
                 self.index.add(doc_id, emb)
 
-    def upsert(self, doc_id: str, embedding: Optional[List[float]] = None, metadata: Optional[dict] = None, text: Optional[str] = None):
+    def upsert(self, doc_id: Optional[str] = None, embedding: Optional[List[float]] = None,
+               metadata: Optional[dict] = None, text: Optional[str] = None):
         if embedding is None:
             if self.embedder is not None and text is not None:
                 embedding = self.embedder.embed_text(text)
             else:
                 raise RuntimeError('Embedding is required (either provide embedding or embedder+text)')
+
         emb_norm = normalize_vector(embedding)
-        meta_obj = DocumentMetadata(id=doc_id, metadata=(metadata or {}), text=text)
+        calc_id = doc_id or hash_embedding(emb_norm)
+
+        # === Metadata ===
+        meta_obj = DocumentMetadata(
+            id=calc_id,
+            metadata=(metadata or {}),
+            text=text,
+            created_at=time.time(),
+            updated_at=time.time(),
+        )
         self.storage.upsert_metadata(meta_obj)
-        self.storage.upsert_embedding(doc_id, emb_norm)
-        self.index.update(doc_id, emb_norm)
+
+        # === Embedding ===
+        emb_obj = DocumentEmbedding(
+            id=calc_id,
+            embedding=emb_norm,
+            created_at=time.time(),
+            updated_at=time.time(),
+        )
+        self.storage.upsert_embedding(emb_obj)
+
+        # === Update index ===
+        self.index.update(calc_id, emb_norm)
 
     def get(self, doc_id: str) -> Optional[Tuple[DocumentMetadata, Optional[List[float]]]]:
         meta = self.storage.get_metadata(doc_id)
         emb = self.storage.get_embedding(doc_id)
         return (meta, emb)
 
-    def delete(self, doc_id: str):
-        self.storage.delete(doc_id)
+    def delete(self, doc_id: str, hard: bool = False):
+        self.storage.delete(doc_id, hard=hard)
         self.index.remove(doc_id)
 
     def update_metadata(self, doc_id: str, metadata_patch: Dict[str, Any]):
@@ -48,9 +71,12 @@ class VectorDB:
         if meta is None:
             raise KeyError(f'Document {doc_id} metadata not found')
         meta.metadata.update(metadata_patch)
+        meta.updated_at = time.time()
+        meta.version += 1
         self.storage.upsert_metadata(meta)
 
-    def search(self, query_embedding: Optional[List[float]] = None, k: int = 10, filter_metadata: Optional[Callable[[dict], bool]] = None) -> List[Tuple[DocumentMetadata, float]]:
+    def search(self, query_embedding: Optional[List[float]] = None, k: int = 10,
+               filter_metadata: Optional[Callable[[dict], bool]] = None) -> List[Tuple[DocumentMetadata, float]]:
         if query_embedding is None:
             raise RuntimeError('query_embedding is required for search in this schema')
         q = normalize_vector(query_embedding)
@@ -58,7 +84,7 @@ class VectorDB:
         results: List[Tuple[DocumentMetadata, float]] = []
         for doc_id, score in hits:
             meta = self.storage.get_metadata(doc_id)
-            if meta is None:
+            if meta is None or meta.is_deleted:
                 continue
             if filter_metadata and not filter_metadata(meta.metadata):
                 continue

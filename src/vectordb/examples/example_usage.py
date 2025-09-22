@@ -18,23 +18,24 @@ def demo():
         db.upsert(doc_id=doc_id, embedding=emb, metadata=meta, text=text)
 
 
-    print('Search for brown fox (vector)')
-    q = embedder.embed_text('brown fox')
-    results = db.search(query_embedding=q, k=3)
-    for meta, score in results:
-        print(meta.id, score, meta.metadata, meta.text)
-
-
+    # === Update metadata ===
     print('Update metadata for doc1')
     db.update_metadata('doc1', {'tag': 'animal'})
-    print('Get doc1:', db.get('doc1'))
+    updated_meta, _ = db.get('doc1')
+    print('Get doc1:', updated_meta)
 
 
-    print('Delete doc2')
+    # === Soft delete ===
+    print('Soft delete doc2')
     db.delete('doc2')
     print('Remaining ids with embeddings:', storage.all_ids_with_embeddings())
 
 
+    # === Upsert new doc with auto-generated id ===
+    new_text = 'A clever brown fox'
+    new_emb = embedder.embed_text(new_text)
+    db.upsert(embedding=new_emb, metadata={'source': 'd', 'lang': 'en'}, text=new_text)
+    print('New document added with auto-generated id')
 
 
 if __name__ == '__main__':

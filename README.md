@@ -35,7 +35,9 @@ pip install -r requirements.txt
 
 ## Running Example
 ```bash
-PYTHONPATH=$(pwd)/src python3 src/vectordb/examples/example_usage.py
+export PYTHONPATH=$(pwd)/src
+python3 src/vectordb/examples/example_usage.py
+python3 src/vectordb/examples/example_stub_usage.py
 ```
 
 # === END ===

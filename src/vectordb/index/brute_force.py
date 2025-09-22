@@ -1,36 +1,33 @@
-from __future__ import annotations
 from typing import List, Tuple
 import numpy as np
-from vectordb.models import DocumentMetadata
-from vectordb.utils import cosine_similarity_matrix, normalize_vector
 
 class BruteForceIndex:
-    """Simple in-memory index that keeps embeddings and performs brute-force search."""
-
+    """Simple brute-force vector index using cosine similarity"""
     def __init__(self):
-        # mapping id -> embedding
-        self._id_to_embedding: dict[str, List[float]] = {}
+        self._vectors = {}  # dict of doc_id -> embedding
 
     def add(self, doc_id: str, embedding: List[float]):
-        self._id_to_embedding[doc_id] = normalize_vector(embedding)
-
-    def remove(self, doc_id: str):
-        if doc_id in self._id_to_embedding:
-            del self._id_to_embedding[doc_id]
+        """Add a new embedding to the index"""
+        self._vectors[doc_id] = np.array(embedding, dtype=np.float32)
 
     def update(self, doc_id: str, embedding: List[float]):
-        self.add(doc_id, embedding)
+        """Update embedding in the index"""
+        self._vectors[doc_id] = np.array(embedding, dtype=np.float32)
 
-    def search(self, query_embedding: List[float], k: int = 10) -> List[Tuple[str, float]]:
-        ids = list(self._id_to_embedding.keys())
-        if not ids:
+    def remove(self, doc_id: str):
+        """Remove embedding from the index"""
+        if doc_id in self._vectors:
+            del self._vectors[doc_id]
+
+    def search(self, query: List[float], k: int = 10) -> List[Tuple[str, float]]:
+        """Return top-k closest doc_ids by cosine similarity"""
+        if not self._vectors:
             return []
-        vectors = [self._id_to_embedding[i] for i in ids]
-        sims = cosine_similarity_matrix(query_embedding, vectors)
-        # pair and sort
-        paired = list(zip(ids, sims))
-        paired.sort(key=lambda x: x[1], reverse=True)
-        return paired[:k]
-
-    def all_ids(self) -> List[str]:
-        return list(self._id_to_embedding.keys())
+        query_vec = np.array(query, dtype=np.float32)
+        doc_ids = list(self._vectors.keys())
+        vectors = np.stack([self._vectors[doc_id] for doc_id in doc_ids])
+        norms = np.linalg.norm(vectors, axis=1) * np.linalg.norm(query_vec) + 1e-10
+        sims = vectors @ query_vec / norms
+        # Get top-k indices
+        topk_idx = np.argsort(-sims)[:k]
+        return [(doc_ids[i], float(sims[i])) for i in topk_idx]
