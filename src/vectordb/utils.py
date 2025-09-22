@@ -1,7 +1,7 @@
 import hashlib
 import json
 import numpy as np
-from typing import Iterable, List
+from typing import List
 
 
 def normalize_vector(vec: List[float]) -> List[float]:

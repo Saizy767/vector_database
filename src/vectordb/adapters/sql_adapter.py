@@ -5,11 +5,10 @@ It is intentionally conservative: the adapter is optional and won't raise an imp
 If you want a production SQL adapter, implement concrete table schema and indexing strategies (e.g. pgvector for Postgres)
 """
 from __future__ import annotations
-from typing import Optional
 
 try:
     import sqlalchemy as sa
-    from sqlalchemy import Table, Column, String, LargeBinary, Float, JSON, MetaData
+    from sqlalchemy import Table, Column, String, JSON, MetaData
     SQLALCHEMY_AVAILABLE = True
 except Exception:
     SQLALCHEMY_AVAILABLE = False
