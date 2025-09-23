@@ -24,7 +24,7 @@ class VectorDB:
             if emb is not None:
                 self.index.add(doc_id, emb)
 
-    def upsert(self, doc_id: Optional[str] = None, embedding: Optional[List[float]] = None,
+    def upsert(self, doc_id: Optional[str] = None, embedding: Optional[DocumentEmbedding] = None,
                metadata: Optional[dict] = None, text: Optional[str] = None):
         if embedding is None:
             if self.embedder is not None and text is not None:
@@ -49,8 +49,7 @@ class VectorDB:
         emb_obj = DocumentEmbedding(
             id=calc_id,
             embedding=emb_norm,
-            created_at=time.time(),
-            updated_at=time.time(),
+            is_deleted=False
         )
         self.storage.upsert_embedding(emb_obj)
 

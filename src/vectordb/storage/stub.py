@@ -24,11 +24,8 @@ class StubStorage(StorageInterface):
         print("Stub query_metadata called")
         return [m for m in self._metadatas.values() if predicate(m.metadata)]
 
-
     def upsert_embedding(self, emb: DocumentEmbedding):
-        print(f"Stub upsert_embedding called: {emb.id}")
         self._embeddings[emb.id] = emb
-
 
     def get_embedding(self, doc_id: str) -> Optional[List[float]]:
         print(f"Stub get_embedding called: {doc_id}")

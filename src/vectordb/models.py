@@ -19,7 +19,4 @@ class DocumentMetadata:
 class DocumentEmbedding:
     id: str                     # hash of embedding (matches metadata.id)
     embedding: List[float]      # normalized embedding vector
-    created_at: float = field(default_factory=lambda: time.time())  # creation timestamp
-    updated_at: float = field(default_factory=lambda: time.time())  # last update timestamp
-    version: int = 1            # version of embedding
     is_deleted: bool = False    # soft delete flag for embedding

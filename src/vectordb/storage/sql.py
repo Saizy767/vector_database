@@ -1,94 +1,157 @@
-from __future__ import annotations
+"""
+Universal SQLStorage using SQLAlchemy.
+
+
+This implementation maps between the dataclasses (DocumentMetadata, DocumentEmbedding)
+and ORM models (MetadataORM, EmbeddingORM). Embeddings are stored as JSON for portability.
+"""
 from typing import List, Optional, Callable
-
-
-try:
-    import sqlalchemy as sa
-    from sqlalchemy import Table, Column, String, MetaData, JSON
-    SQLALCHEMY_AVAILABLE = True
-except Exception:
-    SQLALCHEMY_AVAILABLE = False
-
-
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from vectordb.storage.interface import StorageInterface
-from vectordb.models import DocumentMetadata
+from vectordb.models import DocumentMetadata, DocumentEmbedding
+from vectordb.storage.sql_base import Base, MetadataORM, EmbeddingORM
 
 
 class SQLStorage(StorageInterface):
-    def __init__(self, connection_string: str):
-        if not SQLALCHEMY_AVAILABLE:
-            raise RuntimeError("SQLAlchemy not installed; install it to use SQLStorage")
-        self.engine = sa.create_engine(connection_string)
-        self.meta = MetaData()
-        self.meta_table = Table(
-        'vectordb_metadata', self.meta,
-        Column('id', String, primary_key=True),
-        Column('text', String),
-        Column('metadata', JSON),
-        )
-        self.emb_table = Table(
-        'vectordb_embeddings', self.meta,
-        Column('id', String, primary_key=True),
-        Column('embedding', String),
-        )
-        self.meta.create_all(self.engine)
+    """
+    SQLAlchemy-based storage backend for metadata and embeddings.
+    connection_string: SQLAlchemy connect string, e.g.:
+    sqlite:///vectordb.sqlite
+    postgresql+psycopg2://user:pass@host/dbname
+    """
 
+
+    def __init__(self, connection_string: str, echo: bool = False):
+        self.engine = create_engine(connection_string, echo=echo, future=True)
+        Base.metadata.create_all(self.engine)
+        self.Session = sessionmaker(bind=self.engine, expire_on_commit=False)
+
+    # ----------------- Metadata -----------------
 
     def upsert_metadata(self, meta: DocumentMetadata):
-        with self.engine.begin() as conn:
-            stmt = sa.insert(self.meta_table).values(id=meta.id, text=meta.text, metadata=meta.metadata)
-            stmt = stmt.prefix_with('OR REPLACE')
-            conn.execute(stmt)
+        """
+        Insert or update metadata row. Keeps created_at on existing rows.
+        """
+        with self.Session() as session:
+            orm_obj = session.get(MetadataORM, meta.id)
+            if orm_obj is None:
+                orm_obj = MetadataORM(
+                    id=meta.id,
+                    text=meta.text,
+                    metadata=meta.metadata or {},
+                    version=meta.version,
+                    is_deleted=meta.is_deleted,
+                    similar_ids=meta.similar_ids or [],
+                )
+                session.add(orm_obj)
+            else:
+                # update fields (created_at stays the same)
+                orm_obj.text = meta.text
+                orm_obj.metadata = meta.metadata or {}
+                orm_obj.version = meta.version
+                orm_obj.is_deleted = meta.is_deleted
+                orm_obj.similar_ids = meta.similar_ids or []
+            session.commit()
 
 
     def get_metadata(self, doc_id: str) -> Optional[DocumentMetadata]:
-        with self.engine.connect() as conn:
-            q = self.meta_table.select().where(self.meta_table.c.id == doc_id)
-            r = conn.execute(q).first()
-            if r is None:
+        with self.Session() as session:
+            orm_obj = session.get(MetadataORM, doc_id)
+            if orm_obj is None:
                 return None
-            return DocumentMetadata(id=r['id'], text=r.get('text'), metadata=r.get('metadata'))
-
-
-    def delete_metadata(self, doc_id: str):
-        with self.engine.begin() as conn:
-            stmt = self.meta_table.delete().where(self.meta_table.c.id == doc_id)
-            conn.execute(stmt)
-
-
-    def query_metadata_all(self) -> List[DocumentMetadata]:
-        with self.engine.connect() as conn:
-            res = conn.execute(self.meta_table.select()).fetchall()
-            return [DocumentMetadata(id=r['id'], text=r.get('text'), metadata=r.get('metadata')) for r in res]
+            return DocumentMetadata(
+                id=orm_obj.id,
+                metadata=orm_obj.metadata or {},
+                text=orm_obj.text,
+                created_at=orm_obj.created_at.timestamp() if orm_obj.created_at else None,
+                updated_at=orm_obj.updated_at.timestamp() if orm_obj.updated_at else None,
+                version=orm_obj.version,
+                is_deleted=orm_obj.is_deleted,
+                similar_ids=orm_obj.similar_ids or [],
+                )
 
 
     def query_metadata(self, predicate: Callable[[dict], bool]) -> List[DocumentMetadata]:
-        return [m for m in self.query_metadata_all() if predicate(m.metadata)]
+        results: List[DocumentMetadata] = []
+        with self.Session() as session:
+            rows = session.query(MetadataORM).all()
+            for r in rows:
+                if predicate(r.metadata):
+                    results.append(
+                        DocumentMetadata(
+                            id=r.id,
+                            metadata=r.metadata or {},
+                            text=r.text,
+                            created_at=r.created_at.timestamp() if r.created_at else None,
+                            updated_at=r.updated_at.timestamp() if r.updated_at else None,
+                            version=r.version,
+                            is_deleted=r.is_deleted,
+                            similar_ids=r.similar_ids or []
+                        )
+                    )
+        return results
 
 
+# ----------------- Embeddings -----------------
     def upsert_embedding(self, doc_id: str, embedding: List[float]):
-        with self.engine.begin() as conn:
-            stmt = sa.insert(self.emb_table).values(id=doc_id, embedding=str(embedding))
-            stmt = stmt.prefix_with('OR REPLACE')
-            conn.execute(stmt)
+        print(f"Stub upsert_embedding called: {doc_id}")
+        self._embeddings[doc_id] = DocumentEmbedding(id=doc_id, embedding=embedding, is_deleted=False)
+
+
+    def upsert_embedding(self, emb: DocumentEmbedding):
+        """
+        Insert or update embedding row. Accepts a DocumentEmbedding dataclass.
+        Embedding stored as JSON array.
+        """
+        with self.Session() as session:
+            orm_obj = session.get(EmbeddingORM, emb.id)
+            if orm_obj is None:
+                orm_obj = EmbeddingORM(
+                    id=emb.id,
+                    embedding=emb.embedding,
+                    is_deleted=emb.is_deleted,
+                )
+                session.add(orm_obj)
+            else:
+                orm_obj.embedding = emb.embedding
+                orm_obj.is_deleted = emb.is_deleted
+            session.commit()
 
 
     def get_embedding(self, doc_id: str) -> Optional[List[float]]:
-        with self.engine.connect() as conn:
-            q = self.emb_table.select().where(self.emb_table.c.id == doc_id)
-            r = conn.execute(q).first()
-            if r is None:
+        with self.Session() as session:
+            orm_obj = session.get(EmbeddingORM, doc_id)
+            if orm_obj is None:
                 return None
-            return eval(r['embedding'])
-        
-    
-    def delete_embedding(self, doc_id: str):
-        with self.engine.begin() as conn:
-            stmt = self.emb_table.delete().where(self.emb_table.c.id == doc_id)
-            conn.execute(stmt)
+            return orm_obj.embedding
 
 
     def all_ids_with_embeddings(self) -> List[str]:
-        with self.engine.connect() as conn:
-            res = conn.execute(self.emb_table.select()).fetchall()
-            return [r['id'] for r in res]
+        with self.Session() as session:
+            rows = session.query(EmbeddingORM.id).all()
+            return [r[0] for r in rows]
+
+
+    # ----------------- Delete -----------------
+
+
+def delete(self, doc_id: str, hard: bool = False):
+    """
+    If hard=True, perform physical delete of metadata and embedding.
+    Otherwise set is_deleted=True for both rows (soft delete).
+    """
+    with self.Session() as session:
+        meta = session.get(MetadataORM, doc_id)
+        emb = session.get(EmbeddingORM, doc_id)
+        if hard:
+            if emb:
+                session.delete(emb)
+            if meta:
+                session.delete(meta)
+        else:
+            if meta:
+                meta.is_deleted = True
+            if emb:
+                emb.is_deleted = True
+        session.commit()
