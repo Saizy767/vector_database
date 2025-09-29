@@ -1,10 +1,3 @@
-"""
-Universal SQLStorage using SQLAlchemy.
-
-
-This implementation maps between the dataclasses (DocumentMetadata, DocumentEmbedding)
-and ORM models (MetadataORM, EmbeddingORM). Embeddings are stored as JSON for portability.
-"""
 from typing import List, Optional, Callable
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -21,7 +14,6 @@ class SQLStorage(StorageInterface):
     postgresql+psycopg2://user:pass@host/dbname
     """
 
-
     def __init__(self, connection_string: str, echo: bool = False):
         self.engine = create_engine(connection_string, echo=echo, future=True)
         Base.metadata.create_all(self.engine)
@@ -30,30 +22,25 @@ class SQLStorage(StorageInterface):
     # ----------------- Metadata -----------------
 
     def upsert_metadata(self, meta: DocumentMetadata):
-        """
-        Insert or update metadata row. Keeps created_at on existing rows.
-        """
         with self.Session() as session:
             orm_obj = session.get(MetadataORM, meta.id)
             if orm_obj is None:
                 orm_obj = MetadataORM(
                     id=meta.id,
                     text=meta.text,
-                    metadata=meta.metadata or {},
+                    meta_json=meta.metadata or {},  # ✅ исправлено
                     version=meta.version,
                     is_deleted=meta.is_deleted,
                     similar_ids=meta.similar_ids or [],
                 )
                 session.add(orm_obj)
             else:
-                # update fields (created_at stays the same)
                 orm_obj.text = meta.text
-                orm_obj.metadata = meta.metadata or {}
+                orm_obj.meta_json = meta.metadata or {}  # ✅ исправлено
                 orm_obj.version = meta.version
                 orm_obj.is_deleted = meta.is_deleted
                 orm_obj.similar_ids = meta.similar_ids or []
             session.commit()
-
 
     def get_metadata(self, doc_id: str) -> Optional[DocumentMetadata]:
         with self.Session() as session:
@@ -62,26 +49,25 @@ class SQLStorage(StorageInterface):
                 return None
             return DocumentMetadata(
                 id=orm_obj.id,
-                metadata=orm_obj.metadata or {},
+                metadata=orm_obj.meta_json or {},
                 text=orm_obj.text,
                 created_at=orm_obj.created_at.timestamp() if orm_obj.created_at else None,
                 updated_at=orm_obj.updated_at.timestamp() if orm_obj.updated_at else None,
                 version=orm_obj.version,
                 is_deleted=orm_obj.is_deleted,
                 similar_ids=orm_obj.similar_ids or [],
-                )
-
+            )
 
     def query_metadata(self, predicate: Callable[[dict], bool]) -> List[DocumentMetadata]:
         results: List[DocumentMetadata] = []
         with self.Session() as session:
             rows = session.query(MetadataORM).all()
             for r in rows:
-                if predicate(r.metadata):
+                if predicate(r.meta_json):
                     results.append(
                         DocumentMetadata(
                             id=r.id,
-                            metadata=r.metadata or {},
+                            metadata=r.meta_json or {},
                             text=r.text,
                             created_at=r.created_at.timestamp() if r.created_at else None,
                             updated_at=r.updated_at.timestamp() if r.updated_at else None,
@@ -92,18 +78,9 @@ class SQLStorage(StorageInterface):
                     )
         return results
 
-
-# ----------------- Embeddings -----------------
-    def upsert_embedding(self, doc_id: str, embedding: List[float]):
-        print(f"Stub upsert_embedding called: {doc_id}")
-        self._embeddings[doc_id] = DocumentEmbedding(id=doc_id, embedding=embedding, is_deleted=False)
-
+    # ----------------- Embeddings -----------------
 
     def upsert_embedding(self, emb: DocumentEmbedding):
-        """
-        Insert or update embedding row. Accepts a DocumentEmbedding dataclass.
-        Embedding stored as JSON array.
-        """
         with self.Session() as session:
             orm_obj = session.get(EmbeddingORM, emb.id)
             if orm_obj is None:
@@ -118,40 +95,32 @@ class SQLStorage(StorageInterface):
                 orm_obj.is_deleted = emb.is_deleted
             session.commit()
 
-
-    def get_embedding(self, doc_id: str) -> Optional[List[float]]:
+    def get_embedding(self, doc_id: str) -> Optional[List[float]]:  # ✅ исправлено
         with self.Session() as session:
             orm_obj = session.get(EmbeddingORM, doc_id)
             if orm_obj is None:
                 return None
             return orm_obj.embedding
 
-
     def all_ids_with_embeddings(self) -> List[str]:
         with self.Session() as session:
             rows = session.query(EmbeddingORM.id).all()
             return [r[0] for r in rows]
 
-
     # ----------------- Delete -----------------
 
-
-def delete(self, doc_id: str, hard: bool = False):
-    """
-    If hard=True, perform physical delete of metadata and embedding.
-    Otherwise set is_deleted=True for both rows (soft delete).
-    """
-    with self.Session() as session:
-        meta = session.get(MetadataORM, doc_id)
-        emb = session.get(EmbeddingORM, doc_id)
-        if hard:
-            if emb:
-                session.delete(emb)
-            if meta:
-                session.delete(meta)
-        else:
-            if meta:
-                meta.is_deleted = True
-            if emb:
-                emb.is_deleted = True
-        session.commit()
+    def delete(self, doc_id: str, hard: bool = False):
+        with self.Session() as session:
+            meta = session.get(MetadataORM, doc_id)
+            emb = session.get(EmbeddingORM, doc_id)
+            if hard:
+                if emb:
+                    session.delete(emb)
+                if meta:
+                    session.delete(meta)
+            else:
+                if meta:
+                    meta.is_deleted = True
+                if emb:
+                    emb.is_deleted = True
+            session.commit()

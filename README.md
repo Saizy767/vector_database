@@ -24,8 +24,8 @@ src/vectordb/
 ├── index/
 │   └── brute_force.py # Brute-force search index
 └── examples/
-├── example_usage.py # Example usage
-└── example_stub_usage.py # Example stub usage
+    ├── example_usage.py # Example usage
+    └── example_stub_usage.py # Example stub usage
 ```
 
 ## Installation

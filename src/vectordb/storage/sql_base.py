@@ -8,21 +8,21 @@ class MetadataORM(Base):
 
     id = Column(String, primary_key=True)
     text = Column(Text, nullable=True)
-    metadata = Column(JSON, nullable=False, default={})
+    meta_json = Column(JSON, nullable=False, default={})
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     version = Column(Integer, default=1)
     is_deleted = Column(Boolean, default=False)
     similar_ids = Column(JSON, default=[])
 
-    embedding = relationship("EmbeddingORM", back_populates="metadata", uselist=False)
+    embedding = relationship("EmbeddingORM", back_populates="parent", uselist=False)
 
 
 class EmbeddingORM(Base):
     __tablename__ = "embeddings"
 
     id = Column(String, ForeignKey("metadata.id", ondelete="CASCADE"), primary_key=True)
-    embedding = Column(JSON, nullable=False)  # universal JSON format
+    embedding = Column(JSON, nullable=False)
     is_deleted = Column(Boolean, default=False)
 
-    metadata = relationship("MetadataORM", back_populates="embedding")
+    parent = relationship("MetadataORM", back_populates="embedding")

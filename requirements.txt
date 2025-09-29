@@ -3,3 +3,9 @@
 
 # Optional: for SQL adapter
     sqlalchemy>=2.0
+
+# Save securete data
+    python-dotenv
+
+# Load for PostgreSQL
+    psycopg2-binary
