@@ -10,22 +10,25 @@ This repository contains a universal vector database implementation in Python.
 ## Project Structure
 ```
 src/vectordb/
-├── core.py # Main VectorDB class
-├── models.py # DocumentMetadata dataclass
-├── utils.py # Vector utilities (normalization, cosine similarity)
+├── core.py               # Main VectorDB class
+├── models.py             # DocumentMetadata dataclass
+├── utils.py              # Vector utilities (normalization, cosine similarity)
 ├── storage/
-│   ├── interface.py # Storage interface
-│   ├── stub.py # Stub in-memory storage for testing
-│   ├── memory.py # Memory backend
-│   └── sql.py # SQL backend
+│   ├── interface.py      # Storage interface
+│   ├── stub.py           # Stub in-memory storage for testing
+│   ├── memory.py         # Memory backend
+│   └── sql.py            # SQL backend
 ├── embeddings/
-│   ├── base.py # Embedding interface
-│   └── dummy.py # Dummy embedding
+│   ├── base.py           # Embedding interface
+│   └── dummy.py          # Dummy embedding
 ├── index/
-│   └── brute_force.py # Brute-force search index
+│   └── brute_force.py    # Brute-force search index
 └── examples/
-    ├── example_usage.py # Example usage
+    ├── example_usage.py  # Example usage
     └── example_stub_usage.py # Example stub usage
+tests/
+└── test_vectordb.py      # Unit tests for VectorDB
+
 ```
 
 ## Installation
@@ -40,4 +43,11 @@ pip install -r requirements.txt
 export PYTHONPATH=$(pwd)/src
 python3 src/vectordb/examples/example_usage.py
 python3 src/vectordb/examples/example_stub_usage.py
+```
+
+## Running Tests
+```bash
+export $PYTHONPATH:$(pwd)/src
+pytest src/tests/ -v
+pytest --cov=vectordb src/tests/ -v
 ```
