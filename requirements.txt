@@ -9,3 +9,8 @@
 
 # Load for PostgreSQL
     psycopg2-binary
+
+# Tests
+    pytest>=7.0.0
+    pytest-cov>=4.0.0
+    pytest-mock>=3.10.0
