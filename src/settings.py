@@ -6,6 +6,7 @@ class Settings(BaseSettings):
 
     embedding_provider:str = Field(default="sentense-transformer", env="EMBEDDING_PROVIDER")
     embedding_model:str = Field(default="dummy", env="EMBEDDING_MODEL")
+    device:str = Field(default="cpu", env="DEVICE")
 
     class Config:
         env_files = '.env'

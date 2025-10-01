@@ -1,5 +1,5 @@
-from typing import List
+import numpy as np
 
 class BaseEmbedding:
-    def embed_text(self, text: str) -> List[float]:
+    def embed_text(self, text: str) -> np.ndarray:
         raise NotImplementedError
