@@ -9,7 +9,7 @@ class BaseExtractor(ABC):
         pass
 
     @abstractmethod    
-    def extract_batch(self):
+    def extract_batches(self):
         pass
 
 

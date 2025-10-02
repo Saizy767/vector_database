@@ -11,20 +11,20 @@ class SQLExtractor(BaseExtractor):
             columns: Optional[List[str]] = None
                     ) -> List[Dict[str, Any]]:
         columns_select = ", ".join(columns) if columns else "*"
-        with self.connector as session:
+        with self.connector.connect() as session:
             query = text(f'SELECT {columns_select} FROM {table_name}')
             result = session.execute(query)
             rows = result.mappings().all()
             return [dict(row) for row in rows]
         
-    def extract_batch(self, table_name:str,
+    def extract_batches(self, table_name:str,
                       batch_size: int = 100,
                       columns: Optional[List[str]] = None
                       ) -> Generator[List[Dict[str, Any]], None, None]:
         columns_select = ", ".join(columns) if columns else "*"
         offset = 0
         while True:
-            with self.connector as session:
+            with self.connector.connect() as session:
                 query = text(
                     f'SELECT {columns_select} FROM {table_name} LIMIT :limit OFFSET :offset'
                     )
@@ -33,7 +33,6 @@ class SQLExtractor(BaseExtractor):
                 if not rows:
                     break
                 yield [dict(row) for row in rows]
-
                 offset += batch_size
 
 

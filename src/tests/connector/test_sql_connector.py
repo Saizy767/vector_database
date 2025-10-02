@@ -17,7 +17,6 @@ def connector():
     yield _connector
     _connector.close()
 
-
 def test_connector_connect_and_query(connector: SQLConnector):
     with connector.connect() as session:
         query = text('SELECT 1')
