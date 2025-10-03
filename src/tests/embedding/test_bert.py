@@ -1,3 +1,4 @@
+import torch
 import numpy as np
 import pytest
 
@@ -6,7 +7,8 @@ from vectordb.utils import cosine_similarity
 
 
 MODEL_NAME = 'bert-base-uncased'
-DEVICE = 'mps'
+DEVICE = 'mps' if torch.backends.mps.is_available() else (
+    'cuda' if torch.cuda.is_available() else 'cpu')
 
 @pytest.fixture(scope="module")
 def bert_embedder_norm():

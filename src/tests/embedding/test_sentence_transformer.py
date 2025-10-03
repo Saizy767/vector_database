@@ -1,17 +1,19 @@
 import pytest
+import torch
 import numpy as np
 
-from vectordb.embedding.sentence_transformer import SentenсeTransformerEmbedding
+from vectordb.embedding.sentence_transformer import SentenceTransformerEmbedding
 
 MODEL_NAME = 'sentence-transformers/all-MiniLM-L6-v2'
-DEVICE = 'mps'
+DEVICE = 'mps' if torch.backends.mps.is_available() else (
+    'cuda' if torch.cuda.is_available() else 'cpu')
 
 
 @pytest.fixture
-def embedder() -> SentenсeTransformerEmbedding:
-    return SentenсeTransformerEmbedding(model_name=MODEL_NAME, device=DEVICE)
+def embedder() -> SentenceTransformerEmbedding:
+    return SentenceTransformerEmbedding(model_name=MODEL_NAME, device=DEVICE)
 
-def test_single_emb(embedder: SentenсeTransformerEmbedding):
+def test_single_emb(embedder: SentenceTransformerEmbedding):
     text = 'Проверка текста'
     embedding = embedder.embed_text(text)
 
@@ -20,7 +22,7 @@ def test_single_emb(embedder: SentenсeTransformerEmbedding):
     assert embedding.shape[0] > 0, "Эмбеддинг не должен быть пустым"
 
 
-def test_similarity_embeddings(embedder: SentenсeTransformerEmbedding):
+def test_similarity_embeddings(embedder: SentenceTransformerEmbedding):
     text = "Проверка на схожесть"
     emb1 = embedder.embed_text(text)
     emb2 = embedder.embed_text(text)

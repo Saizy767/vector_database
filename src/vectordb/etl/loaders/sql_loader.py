@@ -1,7 +1,9 @@
 from typing import List, Dict, Any, Optional, Type
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import Table, MetaData, text
+from sqlalchemy import Table, MetaData, insert
 from sqlalchemy.orm import Session
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.mysql import insert as mysql_insert
 
 from vectordb.etl.base import BaseLoader
 from vectordb.connector.sql_connector import SQLConnector
@@ -30,7 +32,7 @@ class SQLLoader(BaseLoader):
         try:
             with self.connector.connect() as session:  # 🔑 SQLConnector.connect()
                 if self.conflict_update:
-                    self._upsert(session, data)
+                    self.upsert(session, data)
                 else:
                     self._bulk_insert(session, data)
                 session.commit()
@@ -49,35 +51,34 @@ class SQLLoader(BaseLoader):
 
 
     def _table_class(self, session: Session):
-        meta = MetaData(bind=session.bind)
+        meta = MetaData()
         table = Table(self.table_name, meta, autoload_with=session.bind)
         return table
     
 
-    def _upsert(self, session: Session, data: List[Dict]):
-        if not self.conflict_target:
-            raise ValueError(
-                "Для UPSERT нужно указать conflict_target (PK или UNIQUE колонки)"
-            )
+    def upsert(self, session: Session, data: list[dict], pk: str = "id"):
+        if not data:
+            return
+        
+        table = self._table_class(session)
+        dialect = session.bind.dialect.name
 
-        columns = list(data[0].keys())
-        insert_cols = ", ".join(columns)
-        insert_vals = ", ".join([f":{col}" for col in columns])
+        if dialect == "postgresql":
+            stmt = pg_insert(table).values(data)
+            update_dict = {c.name: stmt.excluded[c.name] for c in table.columns if c.name != pk}
+            stmt = stmt.on_conflict_do_update(index_elements=[pk], set_=update_dict)
 
-        update_cols = ", ".join(
-            [f"{col}=EXCLUDED.{col}" for col in self.conflict_update]
-        )
-        conflict_cols = ", ".join(self.conflict_target)
+        elif dialect in ("mysql", "mariadb"):
+            stmt = mysql_insert(table).values(data)
+            update_dict = {c.name: stmt.inserted[c.name] for c in table.columns if c.name != pk}
+            stmt = stmt.on_duplicate_key_update(**update_dict)
 
-        query = text(
-            f"""
-            INSERT INTO {self.table_name} ({insert_cols})
-            VALUES ({insert_vals})
-            ON CONFLICT ({conflict_cols})
-            DO UPDATE SET {update_cols}
-            """
-        )
+        elif dialect == "sqlite":
+            stmt = insert(table).values(data)
+            update_dict = {c.name: stmt.excluded[c.name] for c in table.columns if c.name != pk}
+            stmt = stmt.on_conflict_do_update(index_elements=[pk], set_=update_dict)
 
-        for i in range(0, len(data), self.batch_size):
-            batch = data[i : i + self.batch_size]
-            session.execute(query, batch)
+        else:
+            raise NotImplementedError(f"Upsert не поддержан для {dialect}")
+
+        session.execute(stmt)
