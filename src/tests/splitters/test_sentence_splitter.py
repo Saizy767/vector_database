@@ -6,7 +6,6 @@ from vectordb.splitters.sentence_splitter import SentenceSpliter
 def splitter():
     return SentenceSpliter()
 
-
 def test_quotes(splitter):
     text = 'Он сказал: "Привет!" И ушёл.'
     sentences = splitter.split(text)
