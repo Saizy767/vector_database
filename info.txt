@@ -1,24 +1,115 @@
-Universal Vector DB - Project layout and implementation (SEPARATE EMBEDDINGS & METADATA)
-# ------------------------------------------------------
-# Этот проект — адаптируемая векторная база данных, в которой эмбеддинги
-# и метаданные хранятся в **разных таблицах/хранилищах**, связаны по id.
-# Вход всегда: (id, embedding, metadata[, text]).
-#
-# Структура модулей (файлы расположены в src/vectordb/):
-# - models.py : Document dataclass (lightweight, metadata-only)
-# - storage/interface.py: storage interface describing separate stores
-# - storage/memory.py : memory storage with separate embedding & metadata stores
-# - storage/sql.py : skeleton SQL adapter storing embeddings and metadata in separate tables
-# - index/brute_force.py: in-memory brute-force index (embeddings only)
-# - embeddings/* : embedding provider interfaces (optional)
-# - core.py : VectorDB orchestrator — теперь принимает embedding+metadata always
-# - examples/example_usage.py : demo of CRUD/search with separate stores
-# - utils.py : helpers
-#
-# Ключевые идеи в этом обновлённом варианте:
-# - Хранилище разделено: методы для работы с EMBEDDINGS и METADATA по отдельности.
-# - Index работает только с EMBEDDINGS.
-# - VectorDB ожидает, что при добавлении/апдейте приходит embedding (вектор) и metadata.
-# - Если embedding отсутствует, можно опционально использовать embedder, но вы сказали: "вход всегда вектор и метаданные".
-#
-# ------------------------------------------------------
+📘 Project Overview
+====================
+
+Project Name: VectorDB ETL Pipeline
+Language: Python 3.10+
+Frameworks/Libraries:
+- SQLAlchemy – for database connectivity and ORM
+- Transformers (Hugging Face) – for text embedding (BERT, Sentence Transformers)
+- Pydantic / Pydantic Settings – for configuration validation and management
+- Pytest – for testing
+
+This project implements an ETL (Extract–Transform–Load) pipeline that converts textual data from a relational database into vector embeddings and loads the results back into another SQL table. It is designed to support hybrid search systems or vector databases.
+
+
+🧩 Project Structure
+====================
+project/
+│
+├── main.py                     # Entry point: runs the full ETL pipeline
+├── src/
+│   ├── settings.py             # Pydantic-based configuration loader (.env support)
+│   ├── models/                 # SQLAlchemy ORM models
+│   ├── vectordb/               # Core logic for Vector ETL
+│   │   ├── connector/          # Database connectors (SQLConnector)
+│   │   ├── etl/                # Extractors, Transformers, Loaders
+│   │   ├── embedding/          # Embedding models (BERT, Sentence Transformers)
+│   │   ├── metadata/           # Metadata builder for chunks
+│   │   ├── splitters/          # Sentence splitting utilities
+│   │   └── utils.py            # Helper functions (logging, cosine similarity)
+│   └── tests/                  # Comprehensive pytest-based test suite
+│
+└── .env                        # Environment variables (not tracked by Git)
+
+
+⚙️ How It Works
+====================
+1. Extraction
+   Data is read in batches from a source SQL table using SQLExtractor.
+
+2. Transformation
+   Each text record is:
+   - Split into sentences or smaller chunks using SentenceSpliter
+   - Transformed into numerical vectors (embeddings) via:
+     - SentenceTransformerEmbedding or
+     - BERTEmbedder
+   - Enriched with metadata using MetadataBuilder
+
+3. Loading
+   The transformed chunks and embeddings are inserted (or upserted) into a target SQL table using SQLLoader.
+
+
+🧠 Key Components
+====================
+| Component | Purpose |
+|------------|----------|
+| SQLConnector | Handles DB connections and sessions |
+| SQLExtractor | Reads rows or batches from SQL tables |
+| Transformer | Coordinates text splitting, embedding, and metadata |
+| SQLLoader | Performs bulk insert or upsert of embeddings |
+| SentenceSpliter | Splits raw text into sentences or segments |
+| MetadataBuilder | Generates consistent, validated chunk metadata |
+| EmbeddingChapter | ORM model for storing chunks and embeddings |
+
+
+🧾 Environment Configuration (.env)
+====================
+Example .env file:
+DB_URL=postgresql+psycopg2://user:password@localhost:5432/mydb
+EXTRACT_TABLE_NAME=source_table
+LOAD_TABLE_NAME=embedding_chapter
+SOURCE_ID=id
+EMBEDDING_COLUMNS=chapter_text
+METADATA_COLUMNS=chapter_title,chapter_number
+EMBEDDING_PROVIDER=bert
+EMBEDDING_MODEL=bert-base-uncased
+DEVICE=cuda
+
+
+▶️ Running the Pipeline
+====================
+# Activate environment
+python -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run ETL pipeline
+python main.py
+
+
+🧪 Running Tests
+====================
+All modules are tested with pytest:
+
+export PYTHONPATH=$(pwd)/src
+pytest src/tests/embedding/ -v --cov=vectordb.embedding
+pytest src/tests/connector/ -v --cov=vectordb.connector
+pytest src/tests/etl/extractors/ -v --cov=vectordb.etl.extractors
+pytest src/tests/etl/loaders/ -v --cov=vectordb.etl.loaders
+pytest src/tests/splitters/ -v --cov=vectordb.splitters
+pytest src/tests/metadata/ -v --cov=vectordb.metadata
+
+
+📂 Logging
+====================
+Logs are saved to app.log and also displayed in the console.
+Log format: [timestamp] [level] module: message
+
+
+🛠️ Extensibility
+====================
+- Embedding providers – easily extend by implementing new classes inheriting from BaseEmbedding.
+- Custom metadata – configure field mappings via .env.
+- Additional data sources – implement new connectors based on BaseConnector.
