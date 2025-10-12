@@ -1,8 +1,10 @@
+import logging
 from .base import BaseMetadata
-
 from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field, model_validator, ValidationInfo
 from uuid import uuid4
+
+logger = logging.getLogger(__name__)
 
 class MetadataModel(BaseModel):
     """
@@ -35,6 +37,7 @@ class MetadataBuilder(BaseMetadata):
              ):
         self.field_mapping = field_mapping or {}
         self.include_system_fields = include_system_fields
+        logger.debug("MetadataBuilder initialized")
     
     def _map_fields(self, data: Dict[str, Any]) -> Dict[str, Any]:
         return {self.field_mapping.get(k, k): v for k, v in data.items()}
@@ -54,4 +57,5 @@ class MetadataBuilder(BaseMetadata):
             source_id=source_id,
             data=mapped,
         )
+        logger.debug(f"Built metadata for chunk {chunk_index}/{total_chunks}")
         return metadata.model_dump()

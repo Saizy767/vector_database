@@ -1,3 +1,4 @@
+import logging
 from typing import List, Dict, Any, Optional, Type
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import Table, MetaData, insert
@@ -7,6 +8,8 @@ from sqlalchemy.dialects.mysql import insert as mysql_insert
 
 from vectordb.etl.base import BaseLoader
 from vectordb.connector.sql_connector import SQLConnector
+
+logger = logging.getLogger(__name__)
 
 class SQLLoader(BaseLoader):
     def __init__(
@@ -24,27 +27,31 @@ class SQLLoader(BaseLoader):
         self.conflict_update = conflict_update
         self.conflict_target = conflict_target
         self.orm_class = orm_class
+        logger.debug(f"SQLLoader initialized for table '{table_name}'")
     
     def load(self, data: List[Dict[str, Any]]):
         if not data:
+            logger.debug("No data to load")
             return
-        
+        logger.info(f"Loading {len(data)} records into '{self.table_name}'")
         try:
             with self.connector.connect() as session:  # 🔑 SQLConnector.connect()
                 if self.conflict_update:
-                    self.upsert(session, data)
+                    pk = self.conflict_target[0] if self.conflict_target else "id"
+                    self.upsert(session, data, pk=pk)
                 else:
                     self._bulk_insert(session, data)
                 session.commit()
+                logger.info("Data loaded successfully")
         except SQLAlchemyError as e:
-            print(f"Ошибка при загрузке данных: {e}")
+            logger.error(f"Ошибка при загрузке данных: {e}")
             raise
 
 
     def _bulk_insert(self, session: Session, data: List[Dict]):
         if self.orm_class is None:
             raise ValueError("Для bulk insert требуется orm_class")
-
+        logger.debug(f"Bulk inserting {len(data)} records")
         for i in range(0, len(data), self.batch_size):
             batch = data[i : i + self.batch_size]
             session.bulk_insert_mappings(self.orm_class, batch)
@@ -62,7 +69,7 @@ class SQLLoader(BaseLoader):
         
         table = self._table_class(session)
         dialect = session.bind.dialect.name
-
+        logger.debug(f"Upserting {len(data)} records using dialect '{dialect}'")
         if dialect == "postgresql":
             stmt = pg_insert(table).values(data)
             update_dict = {c.name: stmt.excluded[c.name] for c in table.columns if c.name != pk}

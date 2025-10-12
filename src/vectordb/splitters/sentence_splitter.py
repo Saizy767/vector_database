@@ -1,7 +1,10 @@
 import re
+import logging
 from itertools import zip_longest
 from typing import List
 from .base import BaseSplitter
+
+logger = logging.getLogger(__name__)
 
 class SentenceSpliter(BaseSplitter):
     def __init__(self, abbreviations: List[str] | None = None):
@@ -13,6 +16,7 @@ class SentenceSpliter(BaseSplitter):
             r'\b(?:' + '|'.join(map(re.escape, self.abbreviations)) + r')\.$',
             re.IGNORECASE
         )
+        logger.debug("SentenceSpliter initialized")
 
     def normalize_text(self, text: str) -> str:
         text = text.replace("\n", " ").replace("\r", " ")
@@ -21,6 +25,7 @@ class SentenceSpliter(BaseSplitter):
         return text.strip()
 
     def split(self, text: str) -> List[str]:
+        original_len = len(text)
         text = self.normalize_text(text)
         parts = re.split(r'([.!?]["»”\']?\s+)', text)
         if not parts:
@@ -40,5 +45,5 @@ class SentenceSpliter(BaseSplitter):
                 buffer.clear()
         if buffer:
             sentences.append(''.join(buffer).strip())
-
+        logger.debug(f"Split text (len={original_len}) into {len(sentences)} sentences")
         return sentences

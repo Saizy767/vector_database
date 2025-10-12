@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 
 
 def cosine_similarity(a: np.ndarray, b: np.ndarray, eps: float = 1e-8):
@@ -15,3 +16,14 @@ def cosine_similarity(a: np.ndarray, b: np.ndarray, eps: float = 1e-8):
         b_norms = np.linalg.norm(b, axis=1)[None, :] + eps
         return (a @ b.T) / (a_norms * b_norms)
     raise ValueError("Unsupported shapes")
+
+
+def get_logger(name="vectordb"):
+    logger = logging.getLogger(name)
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(name)s: %(message)s")
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)
+    return logger
