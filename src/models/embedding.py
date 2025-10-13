@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, Text, JSON
+from sqlalchemy import Column, Integer, Text
+from pgvector.sqlalchemy import Vector
+from .types import UTF8JSON
 from .base import Base
 
 class EmbeddingChapter(Base):
@@ -7,5 +9,5 @@ class EmbeddingChapter(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     chunk_text = Column(Text, nullable=False)
-    embedding = Column(JSON, nullable=False)
-    metadata_ = Column("metadata", JSON, nullable=False)
+    embedding = Column(Vector(384), nullable=False)
+    metadata_ = Column("metadata", UTF8JSON, nullable=False)

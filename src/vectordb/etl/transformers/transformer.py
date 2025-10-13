@@ -13,10 +13,12 @@ class Transformer(BaseTransformer):
         embedding: BaseEmbedding,
         splitter: BaseSplitter,
         metadata_builder: Optional[MetadataBuilder] = None,
+        metadata_columns: Optional[List[str]] = None
     ):
         self.embedding = embedding
         self.splitter = splitter
         self.metadata_builder = metadata_builder or MetadataBuilder()
+        self.metadata_columns = metadata_columns or []
         logger.debug("Transformer initialized")
 
     def transform(
@@ -35,6 +37,14 @@ class Transformer(BaseTransformer):
                 )
                 continue
 
+            metadata_row = {}
+            if self.metadata_columns:
+                for col in self.metadata_columns:
+                    if col in row:
+                        metadata_row[col] = row[col]
+            else:
+                metadata_row = {}
+
             chunks = self.splitter.split(raw_text)
             total_chunks = len(chunks)
             source_id = str(row[source_id_column]) if source_id_column and source_id_column in row else None
@@ -45,15 +55,16 @@ class Transformer(BaseTransformer):
                     continue
 
                 embedding = self.embedding.embed_text(chunk)
+                
                 metadata = self.metadata_builder.build(
-                    row_data=row,
+                    row_data=metadata_row,
                     chunk_index=idx,
                     total_chunks=total_chunks,
                     source_id=source_id,
                 )
                 results.append({
                     "chunk_text": chunk,
-                    "embedding": embedding.tolist(),  # для сериализации
+                    "embedding": embedding,
                     "metadata_": metadata,
                 })
         logger.info(f"Produced {len(results)} transformed chunks")

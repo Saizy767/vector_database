@@ -5,9 +5,10 @@ from vectordb import (
     VectorDB,
     SQLConnector,
     SentenceTransformerEmbedding,
-    SentenceSpliter,
+    SentenceSplitter,
     MetadataBuilder,
-    BERTEmbedder
+    BERTEmbedder,
+    SchemaManager
 )
 from models import EmbeddingChapter
 
@@ -27,6 +28,9 @@ def main():
     
     connector = SQLConnector(settings.db_url)
 
+    schema_manager = SchemaManager(connector.engine)
+    schema_manager.initialize()
+
 
     if settings.embedding_provider == "sentence-transformers":
         embedding = SentenceTransformerEmbedding(
@@ -43,7 +47,7 @@ def main():
     
 
     
-    splitter = SentenceSpliter()
+    splitter = SentenceSplitter()
 
     
     field_mapping = {col: col for col in settings.metadata_columns} if settings.metadata_columns else {}
@@ -56,8 +60,9 @@ def main():
         splitter=splitter,
         metadata_builder=metadata_builder,
         target_table=settings.load_table_name,
-        batch_size=100,
-        orm_class=EmbeddingChapter
+        batch_size=1,
+        orm_class=EmbeddingChapter,
+        metadata_columns=settings.metadata_columns
     )
     if not settings.embedding_columns:
         raise ValueError("(embedding_columns) must contain at least one column name in .env")

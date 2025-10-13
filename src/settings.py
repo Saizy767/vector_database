@@ -10,7 +10,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 class Settings(BaseSettings):
     db_url: str = Field(default="", env="DB_URL")
     test_db_url: Optional[str] = None
-    embedding_provider: str = Field(default="sentence-transformer", env="EMBEDDING_PROVIDER")
+    embedding_provider: str = Field(default="sentence-transformers", env="EMBEDDING_PROVIDER")
     embedding_model: str = Field(default="dummy", env="EMBEDDING_MODEL")
     device: str = Field(default="cpu", env="DEVICE")
     

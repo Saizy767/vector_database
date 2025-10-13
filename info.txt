@@ -39,7 +39,7 @@ project/
 
 2. Transformation
    Each text record is:
-   - Split into sentences or smaller chunks using SentenceSpliter
+   - Split into sentences or smaller chunks using SentenceSplitter
    - Transformed into numerical vectors (embeddings) via:
      - SentenceTransformerEmbedding or
      - BERTEmbedder
@@ -57,7 +57,7 @@ project/
 | SQLExtractor | Reads rows or batches from SQL tables |
 | Transformer | Coordinates text splitting, embedding, and metadata |
 | SQLLoader | Performs bulk insert or upsert of embeddings |
-| SentenceSpliter | Splits raw text into sentences or segments |
+| SentenceSplitter | Splits raw text into sentences or segments |
 | MetadataBuilder | Generates consistent, validated chunk metadata |
 | EmbeddingChapter | ORM model for storing chunks and embeddings |
 

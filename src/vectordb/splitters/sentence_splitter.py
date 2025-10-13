@@ -6,7 +6,7 @@ from .base import BaseSplitter
 
 logger = logging.getLogger(__name__)
 
-class SentenceSpliter(BaseSplitter):
+class SentenceSplitter(BaseSplitter):
     def __init__(self, abbreviations: List[str] | None = None):
         self.abbreviations = abbreviations or [
             "г", "ул", "рис", "стр", "т", "т.д", "т.п", "см", "им",
@@ -16,7 +16,7 @@ class SentenceSpliter(BaseSplitter):
             r'\b(?:' + '|'.join(map(re.escape, self.abbreviations)) + r')\.$',
             re.IGNORECASE
         )
-        logger.debug("SentenceSpliter initialized")
+        logger.debug("SentenceSplitter initialized")
 
     def normalize_text(self, text: str) -> str:
         text = text.replace("\n", " ").replace("\r", " ")

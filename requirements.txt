@@ -3,6 +3,7 @@
     pydantic
     pydantic-settings
     sentence_transformers
+    pgvector
 
 # Optional: for SQL adapter
     sqlalchemy>=2.0

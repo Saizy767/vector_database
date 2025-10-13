@@ -1,10 +1,10 @@
 import pytest
-from vectordb.splitters.sentence_splitter import SentenceSpliter
+from vectordb.splitters.sentence_splitter import SentenceSplitter
 
 
 @pytest.fixture(scope='module')
 def splitter():
-    return SentenceSpliter()
+    return SentenceSplitter()
 
 def test_quotes(splitter):
     text = 'Он сказал: "Привет!" И ушёл.'

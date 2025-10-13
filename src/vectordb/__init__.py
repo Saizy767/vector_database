@@ -14,13 +14,15 @@ from .connector.sql_connector import SQLConnector
 from .embedding.sentence_transformer import SentenceTransformerEmbedding
 from .embedding.bert import BERTEmbedder
 from .metadata.metadata_builder import MetadataBuilder
-from .splitters.sentence_splitter import SentenceSpliter
+from .splitters.sentence_splitter import SentenceSplitter
+from .schema_manager.schema_manager import SchemaManager
 
 __all__ = [
     "VectorDB",
     "SQLConnector",
     "SentenceTransformerEmbedding",
     "MetadataBuilder",
-    "SentenceSpliter",
-    "BERTEmbedder"
+    "SentenceSplitter",
+    "BERTEmbedder",
+    "SchemaManager"
 ]

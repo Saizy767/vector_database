@@ -2,6 +2,6 @@
 """
 Модуль для разбиения текста на чанки.
 """
-from .sentence_splitter import SentenceSpliter
+from .sentence_splitter import SentenceSplitter
 
-__all__ = ["SentenceSpliter"]
+__all__ = ["SentenceSplitter"]

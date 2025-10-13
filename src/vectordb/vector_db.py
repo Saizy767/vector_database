@@ -1,4 +1,5 @@
 import logging
+
 from typing import Optional, List
 from vectordb.connector.sql_connector import SQLConnector
 from vectordb.etl.extractors.sql_extractor import SQLExtractor
@@ -7,6 +8,7 @@ from vectordb.etl.loaders.sql_loader import SQLLoader
 from vectordb.embedding.base import BaseEmbedding
 from vectordb.splitters.base import BaseSplitter
 from vectordb.metadata.metadata_builder import MetadataBuilder
+
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +22,7 @@ class VectorDB:
         target_table: Optional[str] = None,
         batch_size: int = 100,
         orm_class = None,
+        metadata_columns: Optional[List[str]] = None
     ):
         self.connector = connector
         self.batch_size = batch_size
@@ -30,6 +33,7 @@ class VectorDB:
             embedding=embedding,
             splitter=splitter,
             metadata_builder=metadata_builder,
+            metadata_columns=metadata_columns
         )
         self.loader = SQLLoader(
             connector=connector,

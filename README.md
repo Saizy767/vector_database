@@ -38,7 +38,7 @@ project/
    - Data is processed in configurable batches for performance.
 
 2. **Transformation**  
-   - Each text entry is split into sentences or smaller chunks using `SentenceSpliter`.
+   - Each text entry is split into sentences or smaller chunks using `SentenceSplitter`.
    - Chunks are embedded using `BERTEmbedder` or `SentenceTransformerEmbedding`.
    - Metadata for each chunk is built and validated via `MetadataBuilder`.
 
@@ -113,7 +113,7 @@ pytest src/tests/metadata/ -v --cov=vectordb.metadata
 | **SQLExtractor** | Fetches data in batches from SQL tables |
 | **Transformer** | Coordinates splitting, embedding, and metadata creation |
 | **SQLLoader** | Loads (inserts/upserts) transformed data into SQL |
-| **SentenceSpliter** | Splits long texts into sentences/chunks |
+| **SentenceSplitter** | Splits long texts into sentences/chunks |
 | **MetadataBuilder** | Generates structured metadata for each text chunk |
 | **EmbeddingChapter** | ORM model for embedding storage |
 
