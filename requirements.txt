@@ -4,6 +4,8 @@
     pydantic-settings
     sentence_transformers
     pgvector
+    asyncpg
+    greenlet
 
 # Optional: for SQL adapter
     sqlalchemy>=2.0
