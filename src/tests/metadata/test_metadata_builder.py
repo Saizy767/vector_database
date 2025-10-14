@@ -1,6 +1,6 @@
 import pytest
 from uuid import UUID
-from vectordb.metadata.metadata_builder import MetadataBuilder, MetadataModel
+from etl.core.metadata.metadata_builder import MetadataBuilder, MetadataModel
 
 
 @pytest.fixture(scope='module')
@@ -95,7 +95,7 @@ def test_multiple_chunks_integration():
 
 import pytest
 from pydantic import ValidationError
-from vectordb.metadata.metadata_builder import MetadataBuilder, MetadataModel
+from etl.core.metadata.metadata_builder import MetadataBuilder, MetadataModel
 
 
 def test_invalid_field_types():

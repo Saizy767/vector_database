@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Type, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import insert
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-from src.vectordb.utils import batched
+from shared.utils import batched
 
 logger = logging.getLogger(__name__)
 

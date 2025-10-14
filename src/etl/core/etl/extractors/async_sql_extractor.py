@@ -1,7 +1,7 @@
 import logging
 from typing import List, Dict, Any, Optional, AsyncGenerator
 from sqlalchemy.sql import text
-from vectordb.connector.async_sql_connector import AsyncSQLConnector
+from etl.core.connector.async_sql_connector import AsyncSQLConnector
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class AsyncSQLExtractor:
                 query = text(
                     f'SELECT {columns_select} FROM {table_name} LIMIT :limit OFFSET :offset'
                 )
-                result = await session.execute(query, {'limit': batch_size, 'offset': offset})
+                result = await session.execute(query, {'limit': int(batch_size), 'offset': int(offset)})
                 rows = result.mappings().all()
                 if not rows:
                     break

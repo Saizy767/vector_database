@@ -1,13 +1,14 @@
 import os
+from pathlib import Path
 from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, field_validator
 
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(__file__).parent.parent.parent
 
 
-class Settings(BaseSettings):
+class ETLSettings(BaseSettings):
     db_url: str = Field(default="", env="DB_URL")
     test_db_url: Optional[str] = None
     embedding_provider: str = Field(default="sentence-transformers", env="EMBEDDING_PROVIDER")
@@ -20,6 +21,7 @@ class Settings(BaseSettings):
     extract_table_name: str = Field(..., env="EXTRACT_TABLE_NAME")
     load_table_name: str = Field(..., env="LOAD_TABLE_NAME")
     source_id: str = Field(..., env="SOURCE_ID")
+    batch_size: int = Field(..., env="BATCH_SIZE")
 
     async_mode: bool = Field(default=False, env="ASYNC_MODE")
 
@@ -39,10 +41,8 @@ class Settings(BaseSettings):
         if v is None:
             return []
         if isinstance(v, str):
-            # Убираем возможные кавычки и скобки из строки (защита от ошибок в .env)
             v = v.strip().strip('"').strip("'")
             if v.startswith("[") and v.endswith("]"):
-                # Попытка распарсить как JSON-массив (опционально)
                 import json
                 try:
                     parsed = json.loads(v)
@@ -50,11 +50,10 @@ class Settings(BaseSettings):
                         return parsed
                 except (ValueError, TypeError):
                     pass
-            # Иначе — обрабатываем как CSV
             return [s.strip() for s in v.split(",") if s.strip()]
         if isinstance(v, list):
             return v
         return []
 
 
-settings = Settings()
+settings = ETLSettings()

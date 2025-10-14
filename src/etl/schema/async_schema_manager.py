@@ -1,9 +1,8 @@
-# src/vectordb/schema_manager/async_schema_manager.py
 import logging
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncConnection
-from models import Base
+from shared.models import Base
 
 logger = logging.getLogger(__name__)
 

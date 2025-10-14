@@ -1,6 +1,6 @@
 import logging
-from vectordb.etl.base import BaseExtractor
-from vectordb.connector.sql_connector import SQLConnector
+from etl.core.etl.base import BaseExtractor
+from etl.core.connector.sql_connector import SQLConnector
 from typing import Generator, List, Dict, Any, Optional
 from sqlalchemy.sql import text
 
@@ -36,7 +36,7 @@ class SQLExtractor(BaseExtractor):
                     f'SELECT {columns_select} FROM {table_name} LIMIT :limit OFFSET :offset'
                     )
                 
-                result = session.execute(query, {'limit': batch_size, 'offset': offset})
+                result = session.execute(query, {'limit': int(batch_size), 'offset': int(offset)})
                 rows = result.mappings().all()
                 if not rows:
                     break

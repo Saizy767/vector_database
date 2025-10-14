@@ -1,13 +1,13 @@
 import logging
 
 from typing import Optional, List
-from vectordb.connector.sql_connector import SQLConnector
-from vectordb.etl.extractors.sql_extractor import SQLExtractor
-from vectordb.etl.transformers.transformer import Transformer
-from vectordb.etl.loaders.sql_loader import SQLLoader
-from vectordb.embedding.base import BaseEmbedding
-from vectordb.splitters.base import BaseSplitter
-from vectordb.metadata.metadata_builder import MetadataBuilder
+from .connector.sql_connector import SQLConnector
+from etl.core.etl.extractors.sql_extractor import SQLExtractor
+from etl.core.etl.transformers.transformer import Transformer
+from etl.core.etl.loaders.sql_loader import SQLLoader
+from etl.core.embedding.base import BaseEmbedding
+from etl.core.splitters.base import BaseSplitter
+from etl.core.metadata.metadata_builder import MetadataBuilder
 
 
 logger = logging.getLogger(__name__)

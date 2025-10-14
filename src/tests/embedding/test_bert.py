@@ -2,8 +2,8 @@ import torch
 import numpy as np
 import pytest
 
-from vectordb.embedding.bert import BERTEmbedder
-from vectordb.utils import cosine_similarity
+from etl.core.embedding.bert import BERTEmbedder
+from shared.utils import cosine_similarity
 
 
 MODEL_NAME = 'bert-base-uncased'

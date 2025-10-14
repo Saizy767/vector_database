@@ -1,10 +1,10 @@
 import logging
 import asyncio
 from typing import Optional, List, Dict, Any, Generator
-from vectordb.etl.base import BaseTransformer
-from vectordb.embedding.base import BaseEmbedding
-from vectordb.splitters.base import BaseSplitter
-from vectordb.metadata.metadata_builder import MetadataBuilder
+from etl.core.etl.base import BaseTransformer
+from etl.core.embedding.base import BaseEmbedding
+from etl.core.splitters.base import BaseSplitter
+from etl.core.metadata.metadata_builder import MetadataBuilder
 
 logger = logging.getLogger(__name__)
 

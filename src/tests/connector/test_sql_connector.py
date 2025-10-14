@@ -1,7 +1,7 @@
 import os
 import pytest
 from sqlalchemy import text
-from vectordb.connector.sql_connector import SQLConnector
+from etl.core.connector.sql_connector import SQLConnector
 from dotenv import load_dotenv
 
 

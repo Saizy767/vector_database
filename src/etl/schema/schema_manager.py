@@ -1,8 +1,7 @@
-# src/db/schema_manager.py
 import logging
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
-from models import Base
+from shared import Base
 
 logger = logging.getLogger(__name__)
 

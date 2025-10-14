@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 
-from vectordb.etl.base import BaseLoader
-from vectordb.connector.sql_connector import SQLConnector
+from etl.core.etl.base import BaseLoader
+from etl.core.connector.sql_connector import SQLConnector
 
 logger = logging.getLogger(__name__)
 

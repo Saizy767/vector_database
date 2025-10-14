@@ -1,5 +1,5 @@
 import pytest
-from vectordb.splitters.sentence_splitter import SentenceSplitter
+from etl.core.splitters.sentence_splitter import SentenceSplitter
 
 
 @pytest.fixture(scope='module')

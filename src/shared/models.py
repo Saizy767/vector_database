@@ -1,7 +1,9 @@
 from sqlalchemy import Column, Integer, Text
 from pgvector.sqlalchemy import Vector
 from .types import UTF8JSON
-from .base import Base
+from sqlalchemy.orm import declarative_base
+
+Base = declarative_base()
 
 class EmbeddingChapter(Base):
     __tablename__ = 'embedding_chapter'

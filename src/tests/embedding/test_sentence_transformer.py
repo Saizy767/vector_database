@@ -2,7 +2,7 @@ import pytest
 import torch
 import numpy as np
 
-from vectordb.embedding.sentence_transformer import SentenceTransformerEmbedding
+from etl.core.embedding.sentence_transformer import SentenceTransformerEmbedding
 
 MODEL_NAME = 'sentence-transformers/all-MiniLM-L6-v2'
 DEVICE = 'mps' if torch.backends.mps.is_available() else (

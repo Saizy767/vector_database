@@ -3,8 +3,8 @@ import pytest
 from dotenv import load_dotenv
 from sqlalchemy import text
 
-from vectordb.connector.sql_connector import SQLConnector
-from vectordb.etl.extractors.sql_extractor import SQLExtractor
+from etl.core.connector.sql_connector import SQLConnector
+from etl.core.etl.extractors.sql_extractor import SQLExtractor
 
 load_dotenv()
 
