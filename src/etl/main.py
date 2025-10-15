@@ -1,4 +1,7 @@
 import logging
+import asyncio
+from etl.pipeline import ETLPipeline
+from etl.config import ETLSettings
 
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.INFO)
@@ -11,15 +14,11 @@ if not root_logger.handlers:
     root_logger.addHandler(file_handler)
     root_logger.addHandler(stream_handler)
 
-import asyncio
-from etl.pipeline import ETLPipeline
-from etl.config import ETLSettings
 
 def main():
     settings = ETLSettings()
     pipeline = ETLPipeline(settings)
     if settings.async_mode:
-        print('START ASYNC')
         asyncio.run(pipeline.run_async())
     else:
         pipeline.run_sync()

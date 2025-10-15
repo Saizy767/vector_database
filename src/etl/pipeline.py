@@ -5,12 +5,13 @@ from etl.core.vector_db import VectorDB
 from etl.core.async_vector_db import AsyncVectorDB
 from etl.core.connector.sql_connector import SQLConnector
 from etl.core.connector.async_sql_connector import AsyncSQLConnector
-from etl.schema.schema_manager import SchemaManager
-from etl.schema.async_schema_manager import AsyncSchemaManager
-from etl.core.embedding.sentence_transformer import SentenceTransformerEmbedding
-from etl.core.embedding.bert import BERTEmbedder
 from etl.core.splitters.sentence_splitter import SentenceSplitter
 from etl.core.metadata.metadata_builder import MetadataBuilder
+from etl.schema.schema_manager import SchemaManager
+from etl.schema.async_schema_manager import AsyncSchemaManager
+
+from shared.embedding.sentence_transformer import SentenceTransformerEmbedding
+from shared.embedding.bert import BERTEmbedder
 from shared.models import EmbeddingChapter
 
 logger = logging.getLogger(__name__)
@@ -50,7 +51,6 @@ class ETLPipeline:
         return MetadataBuilder(field_mapping=field_mapping)
 
     async def run_async(self):
-        print('RUN ASYNC')
         logger.info("🔄 Start ETL in ASYNC")
         connector = AsyncSQLConnector(self.settings.db_url)
         schema_manager = AsyncSchemaManager(connector.engine)
