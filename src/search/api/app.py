@@ -15,10 +15,17 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     backend = create_search_backend()
+
+    # Создаём эмбеддер и получаем его размерность
     embedder_model = SentenceTransformerEmbedding(
         model_name=settings.embedding_model,
         device=settings.device
     )
+    test_vec = embedder_model.embed_text("test")
+    expected_dim = test_vec.shape[0] if hasattr(test_vec, 'shape') else len(test_vec)
+    logger.info(f"Размерность эмбеддера Search: {expected_dim}")
+    await backend.initialize(expected_dim=expected_dim)
+
     embedder = SharedEmbeddingAdapter(embedder=embedder_model)
     service = SearchService(backend=backend, embedder=embedder)
 

@@ -12,7 +12,7 @@ from etl.schema.async_schema_manager import AsyncSchemaManager
 
 from shared.embedding.sentence_transformer import SentenceTransformerEmbedding
 from shared.embedding.bert import BERTEmbedder
-from shared.models import EmbeddingChapter
+from shared.models import create_embedding_model
 
 logger = logging.getLogger(__name__)
 
@@ -49,16 +49,30 @@ class ETLPipeline:
     def _create_metadata_builder(self):
         field_mapping = {col: col for col in self.settings.metadata_columns} if self.settings.metadata_columns else {}
         return MetadataBuilder(field_mapping=field_mapping)
+    
+    def _get_embedding_dim(self, embedder) -> int:
+        test_emb = embedder.embed_text("test")
+        dim = test_emb.shape[0] if hasattr(test_emb, 'shape') else len(test_emb)
+        logger.info(f"Автоопределена размерность эмбеддинга: {dim}")
+        return dim
 
     async def run_async(self):
         logger.info("🔄 Start ETL in ASYNC")
         connector = AsyncSQLConnector(self.settings.db_url)
-        schema_manager = AsyncSchemaManager(connector.engine)
-        await schema_manager.initialize()
-
+   
         embedding = self._create_embedding()
         splitter = SentenceSplitter()
         metadata_builder = self._create_metadata_builder()
+        embedding_dim = self._get_embedding_dim(embedding)
+
+        EmbeddingChapter = create_embedding_model(
+            dim=embedding_dim,
+            table_name=self.settings.load_table_name
+        )
+
+        schema_manager = AsyncSchemaManager(connector.engine)
+        await schema_manager.initialize()
+
 
         text_column = self.settings.embedding_columns[0]
         columns = self.settings.embedding_columns + (self.settings.metadata_columns or [])
@@ -100,10 +114,19 @@ class ETLPipeline:
     def run_sync(self):
         logger.info("🔄 Start ETL in SYNC")
         connector = SQLConnector(self.settings.db_url)
-        schema_manager = SchemaManager(connector.engine)
-        schema_manager.initialize()
 
         embedding = self._create_embedding()
+        embedding_dim = self._get_embedding_dim(embedding)
+
+        EmbeddingChapter = create_embedding_model(
+            dim=embedding_dim,
+            table_name=self.settings.load_table_name
+        )
+
+        schema_manager = SchemaManager(connector.engine)
+        schema_manager.initialize()
+        
+
         splitter = SentenceSplitter()
         metadata_builder = self._create_metadata_builder()
 

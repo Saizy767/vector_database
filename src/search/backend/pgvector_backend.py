@@ -3,15 +3,18 @@ from typing import List, Dict, Any, Optional
 from sqlalchemy import text, select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from search.core.abc import BaseSearchBackend
-from shared.models import EmbeddingChapter
+from shared.models import create_embedding_model, Base
+from shared.db_utils import get_embedding_dim_from_db  # ← новая утилита
 
 logger = logging.getLogger(__name__)
 
 class PGVectorBackend(BaseSearchBackend):
-    def __init__(self, db_url: str):
+    def __init__(self, db_url: str, table_name: str):
         if not db_url.startswith("postgresql+asyncpg://"):
             db_url = db_url.replace("postgresql://", "postgresql+asyncpg://")
         self.db_url = db_url
+        self.table_name = table_name
+
         self.engine = create_async_engine(
             self.db_url,
             echo=False,
@@ -24,7 +27,31 @@ class PGVectorBackend(BaseSearchBackend):
             expire_on_commit=False,
             autoflush=False,
         )
-        logger.info("✅ PGVectorBackend initialized with connection pool")
+
+        # Пока модель не создана — EmbeddingChapter = None
+        self.EmbeddingChapter = None
+
+    async def initialize(self, expected_dim: int):
+        """
+        Вызывается один раз при старте.
+        1. Определяет фактическую размерность из БД.
+        2. Сравнивает с expected_dim (от эмбеддера).
+        3. Создаёт ORM-модель.
+        """
+        actual_dim = await get_embedding_dim_from_db(self.engine, self.table_name)
+        if actual_dim != expected_dim:
+            raise ValueError(
+                f"Несовпадение размерности эмбеддингов:\n"
+                f"  - В БД (таблица {self.table_name}): {actual_dim}\n"
+                f"  - У поискового эмбеддера: {expected_dim}\n"
+                f"Проверьте, что ETL и Search используют одну и ту же модель."
+            )
+
+        self.EmbeddingChapter = create_embedding_model(
+            dim=actual_dim,
+            table_name=self.table_name
+        )
+        logger.info(f"✅ EmbeddingChapter создан с dim={actual_dim} для таблицы {self.table_name}")
 
     async def connect(self):
         pass
@@ -50,47 +77,46 @@ class PGVectorBackend(BaseSearchBackend):
         metadata_filter: Optional[Dict[str, Any]] = None,
         **kwargs
     ) -> List[Dict[str, Any]]:
+        if self.EmbeddingChapter is None:
+            raise RuntimeError("PGVectorBackend не инициализирован. Вызовите .initialize()")
+
         from sqlalchemy import and_
-
         async with self.SessionLocal() as session:
-            # Вычисляем порог расстояния (cosine distance)
             dist_thresh = 2.0 * (1.0 - min_similarity)
-
-            # Базовый запрос: ближайшие векторы
             stmt = (
                 select(
-                    EmbeddingChapter.id,
-                    EmbeddingChapter.chunk_text,
-                    EmbeddingChapter.embedding,
-                    EmbeddingChapter.metadata_,  # ← это поле автоматически десериализуется в dict
-                    EmbeddingChapter.embedding.cosine_distance(query_vector).label("distance")
+                    self.EmbeddingChapter.id,
+                    self.EmbeddingChapter.chunk_text,
+                    self.EmbeddingChapter.embedding,
+                    self.EmbeddingChapter.metadata_,
+                    self.EmbeddingChapter.embedding.cosine_distance(query_vector).label("distance")
                 )
-                .where(EmbeddingChapter.embedding.cosine_distance(query_vector) <= dist_thresh)
-                .order_by(EmbeddingChapter.embedding.cosine_distance(query_vector))
+                .where(self.EmbeddingChapter.embedding.cosine_distance(query_vector) <= dist_thresh)
+                .order_by(self.EmbeddingChapter.embedding.cosine_distance(query_vector))
                 .limit(top_k)
             )
 
-            # Применяем фильтрацию по метаданным (если есть)
             if metadata_filter:
-                from sqlalchemy import text
+                from sqlalchemy import text as sql_text
                 where_clauses = []
+                params = {}
                 for key, value in metadata_filter.items():
+                    param_name = f"val_{key.replace('.', '_')}"
                     if key.startswith("data."):
                         json_path = key[5:]
                         where_clauses.append(
-                            text(f"(metadata_->'data'->>'{json_path}') = :val_{key.replace('.', '_')}")
+                            sql_text(f"(metadata_->'data'->>'{json_path}') = :{param_name}")
                         )
                     else:
                         where_clauses.append(
-                            text(f"(metadata_->>'{key}') = :val_{key.replace('.', '_')}")
+                            sql_text(f"(metadata_->>'{key}') = :{param_name}")
                         )
+                    params[param_name] = str(value)
                 stmt = stmt.where(and_(*where_clauses))
+            else:
+                params = {}
 
-            # Выполняем запрос
-            result = await session.execute(stmt, {
-                f"val_{k.replace('.', '_')}": str(v) for k, v in metadata_filter.items()
-            } if metadata_filter else {})
-
+            result = await session.execute(stmt, params)
             rows = result.fetchall()
             results = []
             for row in rows:
@@ -101,6 +127,5 @@ class PGVectorBackend(BaseSearchBackend):
                     "metadata": row.metadata_,
                     "similarity": float(similarity)
                 })
-
             logger.debug(f"PGVector search returned {len(results)} results")
             return results

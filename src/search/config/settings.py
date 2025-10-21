@@ -13,6 +13,7 @@ class SearchSettings(BaseSettings):
     min_similarity: float = Field(0.0, ge=0.0, le=1.0, env="SEARCH_MIN_SIMILARITY")
     embedding_model: str = Field("sentence-transformers/all-MiniLM-L6-v2", env="EMBEDDING_MODEL")
     device: str = Field("cpu", env="DEVICE")
+    load_table_name: str = Field(..., env="LOAD_TABLE_NAME")
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(BASE_DIR, ".env"),
