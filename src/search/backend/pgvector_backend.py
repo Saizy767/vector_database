@@ -4,7 +4,6 @@ from sqlalchemy import text, select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from search.core.abc import BaseSearchBackend
 from shared.models import EmbeddingChapter
-from shared.utils import deserialize_json_field
 
 logger = logging.getLogger(__name__)
 

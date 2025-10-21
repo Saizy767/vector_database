@@ -5,7 +5,7 @@ from .connector.sql_connector import SQLConnector
 from etl.core.etl.extractors.sql_extractor import SQLExtractor
 from etl.core.etl.transformers.transformer import Transformer
 from etl.core.etl.loaders.sql_loader import SQLLoader
-from etl.core.embedding.base import BaseEmbedding
+from shared.embedding.base import BaseEmbedding
 from etl.core.splitters.base import BaseSplitter
 from etl.core.metadata.metadata_builder import MetadataBuilder
 

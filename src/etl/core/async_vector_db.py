@@ -4,7 +4,7 @@ from etl.core.connector.async_sql_connector import AsyncSQLConnector
 from etl.core.etl.extractors.async_sql_extractor import AsyncSQLExtractor
 from etl.core.etl.transformers.transformer import Transformer
 from etl.core.etl.loaders.async_sql_loader import AsyncSQLLoader
-from etl.core.embedding.base import BaseEmbedding
+from shared.embedding.base import BaseEmbedding
 from etl.core.splitters.base import BaseSplitter
 from etl.core.metadata.metadata_builder import MetadataBuilder
 
