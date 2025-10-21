@@ -1,5 +1,6 @@
 import numpy as np
 import logging
+import json
 
 from typing import Iterable, TypeVar, Iterator
 from itertools import islice
@@ -42,3 +43,18 @@ def batched(iterable: Iterable[T], n: int) -> Iterator[list[T]]:
         if not batch:
             break
         yield batch
+
+
+def deserialize_json_field(value):
+    """Безопасная десериализация JSON-поля, как это делает UTF8JSON."""
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except (ValueError, TypeError):
+            logging.warning(f"Failed to parse JSON from string: {value[:100]}...")
+            return {}
+    return value

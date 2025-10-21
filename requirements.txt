@@ -6,6 +6,8 @@
     pgvector
     asyncpg
     greenlet
+    fastapi
+    uvicorn
 
 # Optional: for SQL adapter
     sqlalchemy>=2.0
