@@ -15,7 +15,7 @@ class SentenceTransformerEmbedding(BaseEmbedding):
         self.model.eval()
         
     def _mean_pooling(self, model_output, attention_mask) -> torch.Tensor:
-        token_embeddings = model_output.last_hidden_state  # (batch_size, seq_len, hidden_dim)
+        token_embeddings = model_output.last_hidden_state 
         input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
         sum_embeddings = torch.sum(token_embeddings * input_mask_expanded, dim=1)
         sum_mask = input_mask_expanded.sum(dim=1).clamp(min=1e-9)

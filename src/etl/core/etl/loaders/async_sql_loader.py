@@ -1,14 +1,15 @@
 import logging
 from typing import List, Dict, Any, Type, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import insert
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from shared.utils import batched
+
+from etl.core.etl.base import BaseLoader
 
 logger = logging.getLogger(__name__)
 
 
-class AsyncSQLLoader:
+class AsyncSQLLoader(BaseLoader):
     def __init__(
         self,
         orm_class: Type,
