@@ -4,9 +4,7 @@ from etl.core.connector.async_sql_connector import AsyncSQLConnector
 from etl.core.etl.extractors.async_sql_extractor import AsyncSQLExtractor
 from etl.core.etl.transformers.transformer import Transformer
 from etl.core.etl.loaders.async_sql_loader import AsyncSQLLoader
-from shared.embedding.base import BaseEmbedding
-from etl.core.splitters.base import BaseSplitter
-from etl.core.metadata.metadata_builder import MetadataBuilder
+from etl.core.etl.base import BaseExtractor, BaseLoader, BaseTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -14,32 +12,20 @@ logger = logging.getLogger(__name__)
 class AsyncVectorDB:
     def __init__(
         self,
-        connector: AsyncSQLConnector,
-        embedding: BaseEmbedding,
-        splitter: BaseSplitter,
-        metadata_builder: Optional[MetadataBuilder] = None,
-        target_table: Optional[str] = None,
+        extractor: BaseExtractor,
+        transformer: BaseTransformer,
+        loader: BaseLoader,
         batch_size: int = 100,
-        orm_class=None,
-        metadata_columns: Optional[List[str]] = None,
     ):
-        self.connector = connector
+        """
+        Универсальный асинхронный VectorDB.
+        Поддерживает только SQL-based loader'ы (FAISS не поддерживает async).
+        """
+        self.extractor = extractor
+        self.transformer = transformer
+        self.loader = loader
         self.batch_size = batch_size
-        self.target_table = target_table
-        self.orm_class = orm_class
-
-        self.extractor = AsyncSQLExtractor(connector)
-        self.transformer = Transformer(
-            embedding=embedding,
-            splitter=splitter,
-            metadata_builder=metadata_builder,
-            metadata_columns=metadata_columns,
-        )
-        self.loader = AsyncSQLLoader(
-            orm_class=orm_class,
-            batch_size=batch_size,
-        )
-        logger.info("Intialized AsyncVectorDB with async extractor, transformer, loader")
+        logger.info("Initialized AsyncVectorDB with extractor, transformer, loader")
 
     async def async_transform_table(
         self,
@@ -50,13 +36,7 @@ class AsyncVectorDB:
     ):
         if not text_column:
             raise ValueError("text_column is required")
-        if not self.target_table:
-            raise ValueError("target_table must be specified")
-        if self.orm_class is None:
-            raise ValueError("orm_class is required for loading into ORM table")
-
-        logger.info(f"Starting async transform from '{source_table}' to '{self.target_table}'")
-
+        logger.info(f"Starting async transform from '{source_table}'")
         async for batch in self.extractor.extract_batches(
             table_name=source_table,
             batch_size=self.batch_size,
@@ -64,15 +44,23 @@ class AsyncVectorDB:
         ):
             if not batch:
                 continue
-
             transformed_chunks = await self.transformer.atransform(
                 batch_rows=batch,
                 text_column=text_column,
                 source_id_column=source_id_column,
             )
-
             if transformed_chunks:
-                async with self.connector.connect() as session:
-                    await self.loader.load(session, transformed_chunks)
+                if hasattr(self.loader, "orm_class"):
+                    session = await self.extractor.connector.connect()
+                    try:
+                        await self.loader.load(session, transformed_chunks)
+                        await session.commit()
+                    except Exception:
+                        await session.rollback()
+                        raise
+                    finally:
+                        await session.close()
+                else:
+                    await self.loader.load(transformed_chunks)
 
         logger.info("✅ Async ETL pipeline completed successfully.")

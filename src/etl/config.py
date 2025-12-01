@@ -25,6 +25,9 @@ class ETLSettings(BaseSettings):
 
     async_mode: bool = Field(default=False, env="ASYNC_MODE")
 
+    faiss_index_path: Optional[str] = Field(None, env="FAISS_INDEX_PATH")
+    faiss_metadata_path: Optional[str] = Field(None, env="FAISS_METADATA_PATH")
+
     model_config = SettingsConfigDict(
         env_file=os.path.join(BASE_DIR, ".env"),
         env_file_encoding="utf-8"

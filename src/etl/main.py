@@ -18,10 +18,7 @@ if not root_logger.handlers:
 def main():
     settings = ETLSettings()
     pipeline = ETLPipeline(settings)
-    if settings.async_mode:
-        asyncio.run(pipeline.run_async())
-    else:
-        pipeline.run_sync()
+    asyncio.run(pipeline.run()) 
 
 if __name__ == "__main__":
     main()
