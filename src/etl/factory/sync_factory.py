@@ -4,6 +4,7 @@ from etl.core.splitters.sentence_splitter import SentenceSplitter
 from etl.core.metadata.metadata_builder import MetadataBuilder
 from etl.core.etl.extractors.sql_extractor import SQLExtractor
 from etl.core.etl.loaders.sql_loader import SQLLoader
+from etl.core.etl.loaders.faiss_loader import FAISSLoader
 from etl.core.etl.transformers.transformer import Transformer
 from shared.embedding.sentence_transformer import SentenceTransformerEmbedding
 from shared.embedding.bert import BERTEmbedder
@@ -45,6 +46,15 @@ class SyncComponentFactory(BaseComponentFactory):
         return SQLExtractor(connector)
 
     def create_loader(self, *, connector, orm_class):
+        if self.settings.faiss_index_path and self.settings.faiss_metadata_path:
+            embedder = self.create_embedder()
+            embedding_dim = self.get_embedding_dim(embedder)
+            return FAISSLoader(
+                index_path=self.settings.faiss_index_path,
+                metadata_path=self.settings.faiss_metadata_path,
+                embedding_dim=embedding_dim,
+                faiss_index_type="FlatIP"
+            )
         return SQLLoader(
             connector=connector,
             table_name=self.settings.load_table_name,

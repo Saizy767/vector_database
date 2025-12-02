@@ -1,5 +1,6 @@
 # Python cache and virtual environment
 __pycache__/
+.pytest_cache/
 *.py[cod]
 *.egg-info/
 .venv/
@@ -20,3 +21,6 @@ venv/
 
 # Bash
 *.sh
+
+# Data
+data/

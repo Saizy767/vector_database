@@ -23,8 +23,9 @@ class SyncETLRunner(IETLRunner):
         orm_model = self.factory.create_orm_model(embedding_dim)
 
         # Инициализация схемы
-        schema_manager = SchemaManager(self.connector.engine)
-        schema_manager.initialize()
+        if not (self.settings.faiss_index_path and self.settings.faiss_metadata_path):
+            schema_manager = SchemaManager(self.connector.engine)
+            schema_manager.initialize()
 
         # Создание компонентов
         splitter = self.factory.create_splitter()
@@ -53,9 +54,8 @@ class SyncETLRunner(IETLRunner):
 
         text_column = self.factory.get_text_column()
         columns = self.factory.get_columns()
-        logger.info(
-            f"Begin sync ETL: '{self.settings.extract_table_name}' → '{self.vdb.loader.table_name}'"
-        )
+        target = type(self.vdb.loader).__name__
+        logger.info(f"Begin sync ETL: '{self.settings.extract_table_name}' → {target}")
 
         self.vdb.transform_table(
             source_table=self.settings.extract_table_name,
