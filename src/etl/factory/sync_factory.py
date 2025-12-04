@@ -9,6 +9,7 @@ from etl.core.etl.transformers.transformer import Transformer
 from shared.embedding.sentence_transformer import SentenceTransformerEmbedding
 from shared.embedding.bert import BERTEmbedder
 from shared.models import create_embedding_model
+from etl.core.splitters.semantic_chunker import SemanticChunker
 
 class SyncComponentFactory(BaseComponentFactory):
     def create_connector(self):
@@ -36,7 +37,14 @@ class SyncComponentFactory(BaseComponentFactory):
         return create_embedding_model(dim=embedding_dim, table_name=self.settings.load_table_name)
 
     def create_splitter(self):
-        return SentenceSplitter()
+        embedder = self.create_embedder()
+        sentence_splitter = SentenceSplitter()
+        return SemanticChunker(
+            embedder=embedder,
+            threshold=0.35,
+            min_chunk_size=1,
+            sentence_splitter=sentence_splitter
+        )
 
     def create_metadata_builder(self):
         field_mapping = {col: col for col in self.settings.metadata_columns} if self.settings.metadata_columns else {}

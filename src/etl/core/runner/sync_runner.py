@@ -22,12 +22,10 @@ class SyncETLRunner(IETLRunner):
         embedding_dim = self.factory.get_embedding_dim(embedder)
         orm_model = self.factory.create_orm_model(embedding_dim)
 
-        # Инициализация схемы
         if not (self.settings.faiss_index_path and self.settings.faiss_metadata_path):
             schema_manager = SchemaManager(self.connector.engine)
             schema_manager.initialize()
 
-        # Создание компонентов
         splitter = self.factory.create_splitter()
         metadata_builder = self.factory.create_metadata_builder()
         extractor = self.factory.create_extractor(self.connector)
