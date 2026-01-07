@@ -3,6 +3,7 @@ from etl.core.runner.abc import IETLRunner
 from etl.factory.sync_factory import SyncComponentFactory
 from etl.schema.schema_manager import SchemaManager
 from etl.core.vector_db import VectorDB
+
 logger = logging.getLogger(__name__)
 
 class SyncETLRunner(IETLRunner):

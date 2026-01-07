@@ -2,9 +2,9 @@ from etl.factory.base_factory import BaseComponentFactory
 from etl.core.connector.async_sql_connector import AsyncSQLConnector
 from etl.core.splitters.sentence_splitter import SentenceSplitter
 from etl.core.metadata.metadata_builder import MetadataBuilder
-from etl.core.etl.extractors.async_sql_extractor import AsyncSQLExtractor
-from etl.core.etl.loaders.async_sql_loader import AsyncSQLLoader
-from etl.core.etl.transformers.transformer import Transformer
+from etl.core.pipeline.extractors.async_sql_extractor import AsyncSQLExtractor
+from etl.core.pipeline.loaders.async_sql_loader import AsyncSQLLoader
+from etl.core.pipeline.transformers.transformer import Transformer
 from shared.embedding.sentence_transformer import SentenceTransformerEmbedding
 from shared.embedding.bert import BERTEmbedder
 from shared.models import create_embedding_model

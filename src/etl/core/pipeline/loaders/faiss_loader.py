@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Dict, Any
 import numpy as np
 import faiss
-from etl.core.etl.base import BaseLoader
+from etl.core.pipeline.base import BaseLoader
 
 logger = logging.getLogger(__name__)
 

@@ -2,10 +2,10 @@ from etl.factory.base_factory import BaseComponentFactory
 from etl.core.connector.sql_connector import SQLConnector
 from etl.core.splitters.sentence_splitter import SentenceSplitter
 from etl.core.metadata.metadata_builder import MetadataBuilder
-from etl.core.etl.extractors.sql_extractor import SQLExtractor
-from etl.core.etl.loaders.sql_loader import SQLLoader
-from etl.core.etl.loaders.faiss_loader import FAISSLoader
-from etl.core.etl.transformers.transformer import Transformer
+from etl.core.pipeline.extractors.sql_extractor import SQLExtractor
+from etl.core.pipeline.loaders.sql_loader import SQLLoader
+from etl.core.pipeline.loaders.faiss_loader import FAISSLoader
+from etl.core.pipeline.transformers.transformer import Transformer
 from shared.embedding.sentence_transformer import SentenceTransformerEmbedding
 from shared.embedding.bert import BERTEmbedder
 from shared.models import create_embedding_model

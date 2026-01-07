@@ -1,5 +1,5 @@
 import logging
-from etl.core.etl.base import BaseExtractor
+from etl.core.pipeline.base import BaseExtractor
 from etl.core.connector.sql_connector import SQLConnector
 from typing import Generator, List, Dict, Any, Optional
 from sqlalchemy.sql import text

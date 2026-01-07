@@ -1,10 +1,10 @@
 import logging
 from typing import Optional, List
 from etl.core.connector.async_sql_connector import AsyncSQLConnector
-from etl.core.etl.extractors.async_sql_extractor import AsyncSQLExtractor
-from etl.core.etl.transformers.transformer import Transformer
-from etl.core.etl.loaders.async_sql_loader import AsyncSQLLoader
-from etl.core.etl.base import BaseExtractor, BaseLoader, BaseTransformer
+from etl.core.pipeline.extractors.async_sql_extractor import AsyncSQLExtractor
+from etl.core.pipeline.transformers.transformer import Transformer
+from etl.core.pipeline.loaders.async_sql_loader import AsyncSQLLoader
+from etl.core.pipeline.base import BaseExtractor, BaseLoader, BaseTransformer
 
 logger = logging.getLogger(__name__)
 

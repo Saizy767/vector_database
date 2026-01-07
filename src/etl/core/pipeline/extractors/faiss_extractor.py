@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Generator
 import numpy as np
 import faiss
 
-from etl.core.etl.base import BaseExtractor
+from etl.core.pipeline.base import BaseExtractor
 
 logger = logging.getLogger(__name__)
 

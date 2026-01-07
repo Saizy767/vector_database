@@ -1,7 +1,7 @@
 import logging
 import asyncio
 from typing import Optional, List, Dict, Any, Generator
-from etl.core.etl.base import BaseTransformer
+from etl.core.pipeline.base import BaseTransformer
 from shared.embedding.base import BaseEmbedding
 from etl.core.splitters.base import BaseSplitter
 from etl.core.metadata.metadata_builder import MetadataBuilder

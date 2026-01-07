@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from shared.utils import batched
 
-from etl.core.etl.base import BaseLoader
+from etl.core.pipeline.base import BaseLoader
 
 logger = logging.getLogger(__name__)
 

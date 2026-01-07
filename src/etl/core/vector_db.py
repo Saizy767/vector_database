@@ -1,10 +1,10 @@
 import logging
 
 from typing import Optional, List
-from etl.core.etl.extractors.sql_extractor import SQLExtractor
-from etl.core.etl.transformers.transformer import Transformer
-from etl.core.etl.loaders.sql_loader import SQLLoader
-from etl.core.etl.base import BaseExtractor, BaseLoader, BaseTransformer
+from etl.core.pipeline.extractors.sql_extractor import SQLExtractor
+from etl.core.pipeline.transformers.transformer import Transformer
+from etl.core.pipeline.loaders.sql_loader import SQLLoader
+from etl.core.pipeline.base import BaseExtractor, BaseLoader, BaseTransformer
 
 
 logger = logging.getLogger(__name__)

@@ -5,7 +5,7 @@ from sqlalchemy import Column, Integer, String, text
 from sqlalchemy.orm import declarative_base
 from dotenv import load_dotenv
 
-from etl.core.etl.loaders.sql_loader import SQLLoader
+from etl.core.pipeline.loaders.sql_loader import SQLLoader
 from etl.core.connector.sql_connector import SQLConnector
 
 load_dotenv()

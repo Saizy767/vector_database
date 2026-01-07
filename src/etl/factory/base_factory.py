@@ -4,7 +4,7 @@ from etl.core.connector.base import BaseConnector
 from shared.embedding.base import BaseEmbedding
 from etl.core.splitters.base import BaseSplitter
 from etl.core.metadata.base import BaseMetadata
-from etl.core.etl.base import BaseExtractor, BaseLoader, BaseTransformer
+from etl.core.pipeline.base import BaseExtractor, BaseLoader, BaseTransformer
 
 class BaseComponentFactory(ABC):
     def __init__(self, settings: ETLSettings):
