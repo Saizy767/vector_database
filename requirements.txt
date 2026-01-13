@@ -1,25 +1,31 @@
 # Core dependencies
-    numpy>=1.21
-    pydantic
-    pydantic-settings
-    sentence_transformers
-    pgvector
-    asyncpg
-    greenlet
-    fastapi
-    uvicorn
-    faiss-cpu
+sqlalchemy==2.0.30
+asyncpg==0.29.0
+pgvector==0.2.5
+numpy==1.26.4
+pandas==2.2.1
 
-# Optional: for SQL adapter
-    sqlalchemy>=2.0
+# Machine Learning & Embeddings
+torch==2.2.2
+transformers==4.38.2
+sentence-transformers==2.6.1
+faiss-cpu==1.7.4
 
-# Save securete data
-    python-dotenv
+# API & Web Services
+fastapi==0.110.0
+uvicorn==0.29.0
+python-multipart==0.0.9
 
-# Load for PostgreSQL
-    psycopg2-binary
+# Configuration & Utilities
+pydantic==2.6.4
+pydantic-settings==2.2.1
+python-dotenv==1.0.1
 
-# Tests
-    pytest>=7.0.0
-    pytest-cov>=4.0.0
-    pytest-mock>=3.10.0
+# Database & Utilities
+psycopg2-binary==2.9.9
+jsonschema==4.21.1
+requests==2.31.0
+
+# Logging & Monitoring
+structlog==24.1.0
+uvicorn[standard]==0.29.0

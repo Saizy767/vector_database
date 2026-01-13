@@ -7,6 +7,7 @@ __pycache__/
 venv/
 .env
 
+
 # Editor files
 *.swp
 *.swo
@@ -24,3 +25,39 @@ venv/
 
 # Data
 data/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+docker-compose.*.yml
+*.dockerfile
+Dockerfile.*
+
+
+# Docker build artifacts
+*.tar
+*.tar.gz
+*.zip
+build/
+dist/
+target/
+
+
+# Docker volumes and networks
+!data/faiss/  # Важно: сохраняем FAISS индексы для разработки
+data/*.index
+data/*.bin
+volumes/
+
+
+# Docker secrets and configs
+secrets/
+configs/
+.dockerenv
+.dockerinit
+
+
+# IDE and editor files for Docker
+.devcontainer/
+.vscode/devcontainer.json
+.idea/workspace.xml

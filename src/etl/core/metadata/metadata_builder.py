@@ -1,7 +1,7 @@
 import logging
 from .base import BaseMetadata
 from typing import Optional, Dict, Any
-from pydantic import BaseModel, Field, model_validator, ValidationInfo
+from pydantic import BaseModel, Field, model_validator
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
